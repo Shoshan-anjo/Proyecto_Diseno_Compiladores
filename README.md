@@ -1,233 +1,277 @@
-# 📡 Traductor - Traductor Bidireccional de Código Morse
+# 📡 Traductor Morse Bidireccional - Guía Maestro
 
-Un compilador basado en Rust que traduce entre **código Morse y texto** bidireccionalemente. Este proyecto demuestra un pipeline completo de compilación con análisis léxico, análisis sintáctico, análisis semántico, representación intermedia y generación de código.
+Un traductor de **código Morse** profesional construido en **Rust**, que utiliza una arquitectura de **pipeline de compilación** completo (Análisis Léxico, Sintáctico, Semántico, Representación Intermedia y Generación de Código).
 
-## 🏗️ Arquitectura
+---
 
+## 🏗️ 1. Arquitectura del Sistema (Flujo M x N)
+
+Este proyecto no es una simple búsqueda de texto; es un compilador real. Sigue el diseño clásico de un motor de lenguajes, permitiendo múltiples entradas y una representación común.
+
+| Etapa          | Módulo          | Propósito y Lexemas                                                           |
+| -------------- | --------------- | ----------------------------------------------------------------------------- |
+| **Léxico**     | `src/lexer/`    | Rompe el texto en**tokens** (`Dot`, `Dash`, `Space`).                         |
+| **Sintáctico** | `src/parser/`   | Agrupa tokens en secuencias con sentido (letras morse). Usa el lexema `push`. |
+| **Semántico**  | `src/semantic/` | Valida códigos y traduce usando**HashMaps** y el método `.insert()`.          |
+| **IR**         | `src/ir/`       | **Representación Intermedia**: El puente común para todos los lenguajes.      |
+| **Generación** | `src/codegen/`  | Crea la cadena final usando `.collect()` e `.iter()`.                         |
+
+### 📊 Diagrama de Flujo (Modelo M x N)
+
+El flujo sigue la estructura de un compilador "desacoplado", igual que el esquema clásico de diseño de lenguajes:
+
+```mermaid
+graph TD
+    subgraph "Equipo de Lenguaje (Front-end)"
+        A[Entrada: Texto o Morse] --> B["Analizador Léxico (src/lexer/)<br/>Convierte texto en tokens . y -"]
+        B --> C["Analizador Sintáctico (src/parser/)<br/>Agrupa tokens en letras Morse"]
+        C --> D["Analizador Semántico (src/semantic/)<br/>Valida y traduce los códigos"]
+    end
+
+    D --> E("(IR) Código Intermedio (src/ir/)<br/>Puente de datos común")
+
+    subgraph "Equipo de Arquitectura (Back-end)"
+        E --> F["Optimización<br/>Limpieza de datos"]
+        F --> G["Generación de Código Final (src/codegen/)<br/>Construye la cadena de texto final"]
+        G --> H[Resultado Traducido]
+    end
+
+    style E fill:#d4f1f9,stroke:#057e95,stroke-width:2px
 ```
-Texto → Codificador → Morse        (Texto a Morse)
-Morse → Lexer → Parser → Analizador Semántico → IR → Codegen → Texto  (Morse a Texto)
+
+### 🔍 Trazabilidad de una Traducción (Paso a Paso)
+¿Qué ocurre exactamente cuando traduces Morse a Texto? Aquí tienes el viaje de un símbolo:
+
+```mermaid
+graph LR
+    subgraph "Ejemplo: Entrada '--.'"
+        INPUT["'--.'"] -- "1. Lexer" --> LEX["Tokens:<br/>Dash, Dash, Dot"]
+        LEX -- "2. Parser" --> PAR["String Agrupado:<br/>'--.'"]
+        PAR -- "3. Semántico" --> SEM["Mapeo:<br/>'--.' -> 'G'"]
+        SEM -- "4. IR" --> IR_V["Vector IR:<br/>['G']"]
+        IR_V -- "5. Codegen" --> COD["Unión de caracteres:<br/>'G'"]
+        COD -- "6. Pantalla" --> OUT["✅ Resultado: 'G'"]
+    end
 ```
 
-### Módulos
 
-- **lexer** (`src/lexer/`) - Tokeniza entrada de código Morse usando la caja `logos`
-  - `token.rs` - Enumeración de tokens (Punto, Guión, Espacio)
-  
-- **parser** (`src/parser/`) - Construye secuencias de Morse desde tokens
-  - `core.rs` - Convierte flujo de tokens en palabras de código Morse
+### 🛠️ Desección Técnica: Entendiendo el Código (Línea por Línea)
 
-- **semantic** (`src/semantic/`) - Valida, traduce y codifica
-  - `analyzer.rs` - Mapea patrones Morse a caracteres ASCII (Morse → Texto)
-  - `encoder.rs` - Mapea caracteres ASCII a patrones Morse (Texto → Morse)
+A continuación, desglosamos cada parte de tu código para entender qué significa cada palabra clave (**lexema**) y símbolo.
 
-- **ir** (`src/ir/`) - Representación Intermedia
-  - `representation.rs` - Estructura IR simple para secuencias de caracteres
+---
 
-- **codegen** (`src/codegen/`) - Generación de código
-  - `translator.rs` - Convierte IR a salida de texto final
+#### 📂 1. Módulo Codegen (`src/codegen/translator.rs`)
+Este módulo se encarga de la **Generación de Código Final**.
 
-- **ast** (`src/ast/`) - Estructuras del Árbol de Sintaxis Abstracta
-  - `nodes.rs` - Definiciones de nodos AST
+```rust
+pub fn generate(ir: IR) -> String {
+    ir.letters.iter().collect()
+}
+```
+*   **`pub`**: Palabra clave para "Público". Permite que esta función sea vista y usada desde `main.rs`.
+*   **`fn`**: Abreviatura de "Function". Indica el inicio de una función.
+*   **`generate`**: El nombre que le dimos a la función.
+*   **`(ir: IR)`**: El parámetro de entrada. Recibe un objeto de tipo `IR` (Representación Intermedia) y lo llama `ir` dentro de la función.
+*   **`-> String`**: La **flecha de retorno**. Indica que esta función promete entregar un texto (`String`) al terminar.
+*   **`ir.letters`**: Accede a la lista de letras guardadas en el objeto `ir`.
+*   **`.iter()`**: Crea un **iterador** (un desfile de elementos uno por uno).
+*   **`.collect()`**: Es el lexema que "recolecta" las piezas del desfile y las pega para formar el `String` final.
 
-- **cli** (`src/cli.rs`) - Interfaz de línea de comandos usando `clap`
+---
 
-- **utils** (`src/utils/`) - Funciones de utilidad
-  - `error.rs` - Tipos de errores y manejo de resultados
+#### 📂 2. Módulo Semántico (`src/semantic/analyzer.rs`)
+Aquí es donde se define el "significado" de los códigos Morse.
 
-## 🚀 Uso
+```rust
+fn get_morse_map() -> HashMap<String, char> {
+    let mut map = HashMap::new();
+    map.insert("...".to_string(), 'S');
+}
+```
+*   **`HashMap<String, char>`**: Un diccionario donde la clave es un texto (`String`) y el valor es un caracter (`char`).
+*   **`let mut map`**: `let` crea la variable. `mut` (mutable) es el lexema que permite que añadamos datos a la libreta vacía.
+*   **`HashMap::new()`**: Crea la libreta de direcciones vacía.
+*   **`.insert()`**: Es la acción de escribir una nueva entrada en la libreta (Código -> Letra).
+*   **`"...".to_string()`**: Convierte un texto fijo en un objeto `String` dinámico que Rust puede manipular.
 
-### Morse a Texto (Predeterminado)
+---
+
+#### 📂 3. Módulo Lexer (`src/lexer/token.rs`)
+Define los componentes básicos (**tokens**).
+
+```rust
+#[derive(Logos, Debug, PartialEq)]
+pub enum Token {
+    #[token(".")]
+    Dot,
+}
+```
+*   **`#[derive(...)]`**: Es un lexema de "metaprogramación". Le pide a Rust que genere código automáticamente por nosotros para poder imprimir (`Debug`) o comparar (`PartialEq`) los tokens.
+*   **`enum`**: Define una lista de opciones fijas. Un token solo puede ser `Dot`, `Dash`, `Space` o `Text`.
+*   **`#[token(".")]`**: Es un decorador que vincula el símbolo visual `.` con la variante lógica `Dot`.
+
+---
+
+#### 📂 4. Módulo Parser (`src/parser/core.rs`)
+Agrupa los tokens en unidades con sentido.
+
+```rust
+pub fn parse(tokens: Vec<Token>) -> Vec<String> {
+    let mut result = Vec::new();
+    for token in tokens { ... }
+}
+```
+*   **`Vec<Token>`**: Una lista dinámica (Vector) que contiene objetos de tipo `Token`.
+*   **`for token in tokens`**: El bucle que recorre cada pieza del "desfile".
+*   **`match token`**: Es un lexema de "comparación de patrones". Es como un `switch` pero súper potente que obliga a cubrir todas las opciones.
+
+---
+
+#### 📂 5. Orquestador y Menú (`src/main.rs` e `interactive.rs`)
+Donde todo se une y se comunica con el usuario.
+
+```rust
+use std::io::{self, Write};
+
+pub fn run_interactive_mode() {
+    let mut choice = String::new();
+    io::stdin().read_line(&mut choice).expect("Error");
+}
+```
+*   **`use std::io`**: El lexema `use` importa una caja de herramientas (librería estándar) para Entrada/Salida (`io`).
+*   **`{self, Write}`**: Importa `io` mismo y la capacidad de escribir en pantalla (`Write`).
+*   **`io::stdin()`**: Llama a la función de "Entrada Estándar" del sistema.
+*   **`.read_line(&mut choice)`**: Este método detiene el programa y espera a que el usuario escriba algo.
+*   **`&mut choice`**: El símbolo `&` indica una **referencia** (le prestamos la variable a la función). `mut` indica que la función tiene permiso para cambiar el contenido de esa variable con lo que el usuario escriba.
+*   **`.expect()`**: Es el lexema que maneja errores críticos. Si algo falla al leer, el programa se detiene con ese mensaje.
+
+---
+
+#### 📂 6. Estructuras de Datos (`src/ir/representation.rs`)
+Cómo organizamos la información en memoria.
+
+```rust
+#[derive(Debug)]
+pub struct IR {
+    pub letters: Vec<char>,
+}
+```
+*   **`struct`**: Palabra clave para crear una "Estructura" personalizada. Es como una ficha técnica que agrupa diferentes datos relacionados.
+*   **`letters: Vec<char>`**: Define un campo llamado `letters` que es un Vector de caracteres.
+*   **`pub` (dentro de struct)**: No basta con que el `struct` sea público; sus campos también deben serlo si queremos acceder a ellos desde fuera.
+
+---
+
+#### 📂 7. Organización de Módulos (`mod.rs`)
+La jerarquía del árbol.
+
+```rust
+pub mod core;
+pub use core::parse;
+```
+*   **`mod core`**: Declara que existe un archivo llamado `core.rs` en esta misma carpeta.
+*   **`pub use core::parse`**: Es un "re-exporte". Permite que alguien que use este módulo pueda llamar a `parse()` directamente sin tener que escribir `modulo::core::parse()`. Es un atajo de limpieza.
+
+---
+
+## 🚀 2. Guía de Inicio Rápido
+
+### Instalación
+
 ```bash
-# SOS predeterminado
-./traductor.exe
-# Salida: ✅ Texto: SOS
-
-# Código morse personalizado
-./traductor.exe "..." "---" "..."
-# Salida: ✅ Texto: SOS
-
-# Con salida detallada
-./traductor.exe --verbose ".-" "--"
-# 📝 Entrada (Morse): .- --
-# 🔤 Tokens: [Punto, Guión, Espacio, Guión, Guión]
-# 📦 Parseado: [".-", "--"]
-# ✨ Letras: ['A', 'M']
-# 🔧 IR: IR { letras: ['A', 'M'] }
-# ✅ Texto: AM
+git clone https://github.com/Shoshan-anjo/Proyecto_Diseno_Compiladores.git
+cd Traductor_Lexer
+cargo build --release
 ```
 
-### Texto a Morse
+### Ejecución Rápida
+
 ```bash
-# Palabra simple
-./traductor.exe --to-morse mama
-# Salida: ✅ Morse: -- .- -- .-
+# Morse a Texto (Interactivo)
+cargo run
 
-# Frase completa con salida detallada
-./traductor.exe --to-morse --verbose "Hola Mundo"
-# 📝 Entrada (Texto): Hola Mundo
-# ✨ Salida Morse: .... --- .-.. .- / -- ..- -. -.. ---
-# ✅ Morse: .... --- .-.. .- / -- ..- -. -.. ---
+# Texto a Morse (CLI)
+cargo run -- --to-morse "HOLA"
 ```
 
-## 📖 Caracteres Soportados
+---
 
-### Letras (A-Z)
-```
-A: .-     B: -...   C: -.-.   D: -..    E: .      F: ..-.
-G: --.    H: ....   I: ..     J: .---   K: -.-    L: .-..
-M: --     N: -.     O: ---    P: .--.   Q: --.-   R: .-.
-S: ...    T: -      U: ..-    V: ...-   W: .--    X: -..-
-Y: -.--   Z: --..
-```
+## 📋 3. Manual de Uso Detallado
 
-### Números (0-9)
-```
-0: -----  1: .----  2: ..---  3: ...--  4: ....-
-5: .....  6: -....  7: --...  8: ---..  9: ----.
+### OPCIÓN 1: Modo Interactivo (Menú Visual)
+
+Ejecuta el programa sin argumentos para ver el panel de control:
+
+```bash
+cargo run
 ```
 
-### Caracteres Especiales
-Soporta: `.`, `,`, `?`, `'`, `!`, `/`, `(`, `)`, `&`, `:`, `;`, `=`, `+`, `-`, `_`, `"`, `$`, `@`
+**Operaciones disponibles:**
 
-## ✅ Características
+1. **Morse → Texto**: Ingresa códigos separados por espacios (ej. `... --- ...`).
+2. **Texto → Morse**: Ingresa palabras o frases (ej. `mama`).
+3. **Salir**: Cierra el traductor de forma segura.
 
-- ✨ **Traducción bidireccional** - Morse ↔ Texto
-- 🧪 **Pruebas unitarias** - 12 pruebas completas
-- 📝 **Modo detallado** - Depura cada paso de compilación
-- 🎯 **Alfabeto completo** - A-Z, 0-9, caracteres especiales
-- 🚨 **Manejo de errores** - Gestión elegante de caracteres desconocidos
-- 📦 **Interfaz CLI** - Argumentos de línea de comandos fáciles de usar
-- 🏗️ **Arquitectura limpia** - Diseño modular con separación clara
+### OPCIÓN 2: Modo Línea de Comandos (CLI)
 
-## 🧪 Pruebas
+Ideal para scripts o usuarios avanzados:
 
-Ejecuta todas las pruebas:
+```bash
+# Traducir Morse a Texto directo
+./target/release/traductor.exe "...." "." ".-.." ".-.." "---"
+
+# Traducir Texto a Morse con banderas
+./target/release/traductor.exe --to-morse "HOLA MUNDO"
+
+# Modo Detallado (Verbose) para ver el Pipeline
+./target/release/traductor.exe --verbose --to-morse "HI"
+```
+
+### 🔧 Banderas Disponibles
+
+- `-t, --to-morse`: Traduce de Texto a Morse (por defecto es Morse a Texto).
+- `-v, --verbose`: Muestra cada paso de la arquitectura (Tokens, Parser, IR).
+- `-h, --help`: Muestra la ayuda del sistema.
+
+---
+
+## 🧪 4. Desarrollo y Pruebas
+
+El sistema cuenta con una cobertura completa de pruebas unitarias para cada módulo del pipeline.
+
+**Ejecutar todas las pruebas:**
+
 ```bash
 cargo test
 ```
 
-Salida de pruebas:
-```
-ejecutando 12 pruebas
-test ast::nodes::tests::test_letter_creation ... ok
-test ast::nodes::tests::test_word_creation ... ok
-test codegen::translator::tests::test_code_generation ... ok
-test parser::core::tests::test_parse_morse ... ok
-test semantic::analyzer::tests::test_morse_to_letter ... ok
-test semantic::analyzer::tests::test_unknown_morse_code ... ok
-test semantic::encoder::tests::test_single_letter ... ok
-test semantic::encoder::tests::test_simple_word ... ok
-test semantic::encoder::tests::test_number ... ok
-test semantic::encoder::tests::test_lowercase_conversion ... ok
-test semantic::encoder::tests::test_word_with_space ... ok
-test semantic::encoder::tests::test_sentence_with_spaces ... ok
+### Estructura del Código
 
-resultado de prueba: ok. 12 pasadas; 0 fallidas
-```
-
-## 📦 Dependencias
-
-- **logos** (0.16.1) - Análisis léxico
-- **clap** (4.0) - Análisis de línea de comandos
-
-## 🏗️ Construcción
-
-```bash
-# Desarrollo
-cargo build
-
-# Versión optimizada
-cargo build --release
-```
-
-## 📋 Estructura del Proyecto
-
-```
-Traductor_Lexer/
-├── Cargo.toml
-├── README.md
-├── src/
-│   ├── main.rs                    # Punto de entrada con lógica bidireccional
-│   ├── cli.rs                     # Análisis de argumentos CLI
-│   ├── lexer/
-│   │   ├── mod.rs
-│   │   └── token.rs              # Definiciones de tokens Morse
-│   ├── parser/
-│   │   ├── mod.rs
-│   │   └── core.rs               # Análisis de secuencias Morse
-│   ├── semantic/
-│   │   ├── mod.rs
-│   │   ├── analyzer.rs           # Traducción Morse → Texto
-│   │   └── encoder.rs            # Traducción Texto → Morse (NUEVO)
-│   ├── ir/
-│   │   ├── mod.rs
-│   │   └── representation.rs      # Representación intermedia
-│   ├── codegen/
-│   │   ├── mod.rs
-│   │   └── translator.rs         # Generación de código final
-│   ├── ast/
-│   │   ├── mod.rs
-│   │   └── nodes.rs              # Definiciones de nodos AST
-│   └── utils/
-│       ├── mod.rs
-│       └── error.rs              # Manejo de errores
-└── target/                        # Artefactos de construcción
-```
-
-## 🎓 Valor Educativo
-
-Este proyecto demuestra:
-- **Arquitectura de compiladores** - Pipeline completo de entrada a salida
-- **Diseño modular en Rust** - Separación clara de responsabilidades
-- **Traducción bidireccional** - Lógica de conversión en dos direcciones
-- **Coincidencia de patrones** - Mapeo de código Morse a caracteres
-- **Aplicaciones CLI** - Análisis moderno de argumentos con clap
-- **Desarrollo dirigido por pruebas** - Cobertura completa de pruebas
-- **Manejo de errores** - Degradación elegante para entradas desconocidas
-
-## ⚠️ Limitaciones
-
-- ✓ ~~Traducción de Texto a Morse~~ - **IMPLEMENTADO**
-- Sin soporte de entrada/salida de archivos aún
-- Sin soporte multilingüe
-- Sin generación de código Morse de audio/visual
-
-## 🔮 Mejoras Futuras
-
-- [ ] Entrada/salida de archivos (`--input-file`, `--output-file`)
-- [ ] Reproducción de código Morse de audio
-- [ ] Modo REPL interactivo
-- [ ] Optimizaciones de rendimiento (caché)
-- [ ] Compilación a WebAssembly
-- [ ] Soporte multilingüe
-- [ ] Soporte de entrada con streaming
-- [ ] Soporte de caracteres Unicode
-
-## 🚀 Inicio Rápido
-
-```bash
-# Clonar y construir
-git clone https://github.com/Shoshan-anjo/Proyecto_Diseno_Compiladores.git
-cd Traductor_Lexer
-cargo build --release
-
-# Morse a Texto (predeterminado)
-./target/release/traductor.exe "... --- ..."
-# Salida: ✅ Texto: SOS
-
-# Texto a Morse
-./target/release/traductor.exe --to-morse "HOLA"
-# Salida: ✅ Morse: .... --- .-.. .-
-
-# Con salida detallada
-./target/release/traductor.exe --verbose --to-morse "HI"
-```
-
-## 📝 Licencia
-
-Este proyecto es parte de un curso académico de diseño de compiladores.
+- `src/main.rs`: Orquestador principal y lógica de los `if` de entrada.
+- `src/cli.rs`: Configuración de argumentos con la librería `clap`.
+- `src/interactive.rs`: Implementación del menú interactivo (`stdin`/`stdout`).
+- `src/ast/`: Definición de nodos del árbol sintáctico.
 
 ---
 
-**Hecho con ❤️ en Rust** | Traductor Bidireccional de Morse v0.2.0
+## 📖 5. Alfabeto Morse Soportado
+
+### Letras y Números
+
+- **A-Z**: Soporte completo de las 26 letras.
+- **0-9**: Todos los dígitos numéricos.
+- **Especiales**: `. , ? ' ! / ( ) & : ; = + - _ " $ @`
+
+---
+
+## 🔮 Próximos Pasos
+
+- [ ] Soporte para entrada/salida de archivos.
+- [ ] Reproducción de audio del código Morse.
+- [ ] Compilación a WebAssembly (WASM).
+
+---
+
+**Hecho con ❤️ en Rust | v0.2.1**
+_(Toda la arquitectura del traductor explicada en un solo lugar)._

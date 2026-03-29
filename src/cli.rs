@@ -5,7 +5,7 @@ use clap::Parser;
 #[command(about = "Bidirectional Morse code translator", long_about = None)]
 pub struct Args {
     /// Input text or morse code
-    #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0.., default_value = "... --- ...")]
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
     pub input: Vec<String>,
 
     /// Translate to Morse code (default: Morse to text)
