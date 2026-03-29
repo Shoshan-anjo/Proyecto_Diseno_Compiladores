@@ -15,23 +15,39 @@ pub fn validate_and_translate(code: Vec<String>) -> Vec<char> {
 
 fn get_morse_map() -> HashMap<String, char> {
     let mut map = HashMap::new();
-    map.insert("...".to_string(), 'S');
-    map.insert("---".to_string(), 'O');
+    
+    // Letras (26)
+    map.insert(".".to_string(), 'E');
     map.insert(".-".to_string(), 'A');
-    map.insert("-.-".to_string(), 'K');
+    map.insert("-...".to_string(), 'B');
     map.insert("-.-.".to_string(), 'C');
-    map.insert("-..".to_string(), 'B');
+    map.insert("-..".to_string(), 'D');
+    map.insert("...".to_string(), 'S');
+    map.insert("-..".to_string(), 'D');
+    map.insert("..-.".to_string(), 'F');
+    map.insert("--.".to_string(), 'G');
+    map.insert("....".to_string(), 'H');
+    map.insert("..".to_string(), 'I');
+    map.insert(".---".to_string(), 'J');
+    map.insert("-.-".to_string(), 'K');
     map.insert(".-..".to_string(), 'L');
     map.insert("--".to_string(), 'M');
     map.insert("-.".to_string(), 'N');
-    map.insert("--.".to_string(), 'G');
-    map.insert("....".to_string(), 'E');
-    map.insert("..--".to_string(), 'F');
+    map.insert("---".to_string(), 'O');
+    map.insert(".--.".to_string(), 'P');
     map.insert("--.-".to_string(), 'Q');
+    map.insert(".-.".to_string(), 'R');
+    map.insert("...".to_string(), 'S');
+    map.insert("-".to_string(), 'T');
+    map.insert("..-".to_string(), 'U');
     map.insert("...-".to_string(), 'V');
     map.insert(".--".to_string(), 'W');
+    map.insert("-..-".to_string(), 'X');
     map.insert("-.--".to_string(), 'Y');
     map.insert("--..".to_string(), 'Z');
+    
+    // Números (10)
+    map.insert("-----".to_string(), '0');
     map.insert(".----".to_string(), '1');
     map.insert("..---".to_string(), '2');
     map.insert("...--".to_string(), '3');
@@ -41,7 +57,7 @@ fn get_morse_map() -> HashMap<String, char> {
     map.insert("--...".to_string(), '7');
     map.insert("---..".to_string(), '8');
     map.insert("----.".to_string(), '9');
-    map.insert("-----".to_string(), '0');
+    
     map
 }
 
@@ -58,6 +74,6 @@ mod tests {
     #[test]
     fn test_unknown_morse_code() {
         let result = validate_and_translate(vec!["....".to_string()]);
-        assert_eq!(result, vec!['E']);
+        assert_eq!(result, vec!['H']);
     }
 }
