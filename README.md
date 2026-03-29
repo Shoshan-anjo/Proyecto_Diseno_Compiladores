@@ -1,78 +1,78 @@
-# 📡 Traductor - Bidirectional Morse Code Translator
+# 📡 Traductor - Traductor Bidireccional de Código Morse
 
-A Rust-based compiler that translates between **Morse code and text** bidirectionally. This project demonstrates a complete compilation pipeline with lexical analysis, parsing, semantic analysis, intermediate representation, and code generation.
+Un compilador basado en Rust que traduce entre **código Morse y texto** bidireccionalemente. Este proyecto demuestra un pipeline completo de compilación con análisis léxico, análisis sintáctico, análisis semántico, representación intermedia y generación de código.
 
-## 🏗️ Architecture
+## 🏗️ Arquitectura
 
 ```
-Text → Encoder → Morse        (Text to Morse)
-Morse → Lexer → Parser → Semantic Analyzer → IR → Codegen → Text  (Morse to Text)
+Texto → Codificador → Morse        (Texto a Morse)
+Morse → Lexer → Parser → Analizador Semántico → IR → Codegen → Texto  (Morse a Texto)
 ```
 
-### Modules
+### Módulos
 
-- **lexer** (`src/lexer/`) - Tokenizes Morse code input using the `logos` crate
-  - `token.rs` - Token enumeration (Dot, Dash, Space)
+- **lexer** (`src/lexer/`) - Tokeniza entrada de código Morse usando la caja `logos`
+  - `token.rs` - Enumeración de tokens (Punto, Guión, Espacio)
   
-- **parser** (`src/parser/`) - Builds Morse sequences from tokens
-  - `core.rs` - Converts token stream into Morse code words
+- **parser** (`src/parser/`) - Construye secuencias de Morse desde tokens
+  - `core.rs` - Convierte flujo de tokens en palabras de código Morse
 
-- **semantic** (`src/semantic/`) - Validates, translates and encodes
-  - `analyzer.rs` - Maps Morse patterns to ASCII characters (Morse → Text)
-  - `encoder.rs` - Maps ASCII characters to Morse patterns (Text → Morse)
+- **semantic** (`src/semantic/`) - Valida, traduce y codifica
+  - `analyzer.rs` - Mapea patrones Morse a caracteres ASCII (Morse → Texto)
+  - `encoder.rs` - Mapea caracteres ASCII a patrones Morse (Texto → Morse)
 
-- **ir** (`src/ir/`) - Intermediate Representation
-  - `representation.rs` - Simple IR structure for character sequences
+- **ir** (`src/ir/`) - Representación Intermedia
+  - `representation.rs` - Estructura IR simple para secuencias de caracteres
 
-- **codegen** (`src/codegen/`) - Code generation
-  - `translator.rs` - Converts IR to final text output
+- **codegen** (`src/codegen/`) - Generación de código
+  - `translator.rs` - Convierte IR a salida de texto final
 
-- **ast** (`src/ast/`) - Abstract Syntax Tree structures
-  - `nodes.rs` - AST node definitions
+- **ast** (`src/ast/`) - Estructuras del Árbol de Sintaxis Abstracta
+  - `nodes.rs` - Definiciones de nodos AST
 
-- **cli** (`src/cli.rs`) - Command-line interface using `clap`
+- **cli** (`src/cli.rs`) - Interfaz de línea de comandos usando `clap`
 
-- **utils** (`src/utils/`) - Utility functions
-  - `error.rs` - Error types and result handling
+- **utils** (`src/utils/`) - Funciones de utilidad
+  - `error.rs` - Tipos de errores y manejo de resultados
 
-## 🚀 Usage
+## 🚀 Uso
 
-### Morse to Text (Default)
+### Morse a Texto (Predeterminado)
 ```bash
-# Default SOS
+# SOS predeterminado
 ./traductor.exe
-# Output: ✅ Text: SOS
+# Salida: ✅ Texto: SOS
 
-# Custom morse code
+# Código morse personalizado
 ./traductor.exe "..." "---" "..."
-# Output: ✅ Text: SOS
+# Salida: ✅ Texto: SOS
 
-# With verbose output
+# Con salida detallada
 ./traductor.exe --verbose ".-" "--"
-# 📝 Input (Morse): .- --
-# 🔤 Tokens: [Dot, Dash, Space, Dash, Dash]
-# 📦 Parsed: [".-", "--"]
-# ✨ Letters: ['A', 'M']
-# 🔧 IR: IR { letters: ['A', 'M'] }
-# ✅ Text: AM
+# 📝 Entrada (Morse): .- --
+# 🔤 Tokens: [Punto, Guión, Espacio, Guión, Guión]
+# 📦 Parseado: [".-", "--"]
+# ✨ Letras: ['A', 'M']
+# 🔧 IR: IR { letras: ['A', 'M'] }
+# ✅ Texto: AM
 ```
 
-### Text to Morse
+### Texto a Morse
 ```bash
-# Simple word
-./traductor.exe --to-morse Hello
-# Output: ✅ Morse: .... . .-.. .-.. ---
+# Palabra simple
+./traductor.exe --to-morse mama
+# Salida: ✅ Morse: -- .- -- .-
 
-# Full phrase with verbose
-./traductor.exe --to-morse --verbose "Hello World"
-# 📝 Input (Text): Hello World
-# ✨ Morse output: .... . .-.. .-.. --- / .-- --- .-. .-.. -..
-# ✅ Morse: .... . .-.. .-.. --- / .-- --- .-. .-.. -..
+# Frase completa con salida detallada
+./traductor.exe --to-morse --verbose "Hola Mundo"
+# 📝 Entrada (Texto): Hola Mundo
+# ✨ Salida Morse: .... --- .-.. .- / -- ..- -. -.. ---
+# ✅ Morse: .... --- .-.. .- / -- ..- -. -.. ---
 ```
 
-## 📖 Supported Characters
+## 📖 Caracteres Soportados
 
-### Letters (A-Z)
+### Letras (A-Z)
 ```
 A: .-     B: -...   C: -.-.   D: -..    E: .      F: ..-.
 G: --.    H: ....   I: ..     J: .---   K: -.-    L: .-..
@@ -81,35 +81,35 @@ S: ...    T: -      U: ..-    V: ...-   W: .--    X: -..-
 Y: -.--   Z: --..
 ```
 
-### Numbers (0-9)
+### Números (0-9)
 ```
 0: -----  1: .----  2: ..---  3: ...--  4: ....-
 5: .....  6: -....  7: --...  8: ---..  9: ----.
 ```
 
-### Special Characters
-Supports: `.`, `,`, `?`, `'`, `!`, `/`, `(`, `)`, `&`, `:`, `;`, `=`, `+`, `-`, `_`, `"`, `$`, `@`
+### Caracteres Especiales
+Soporta: `.`, `,`, `?`, `'`, `!`, `/`, `(`, `)`, `&`, `:`, `;`, `=`, `+`, `-`, `_`, `"`, `$`, `@`
 
-## ✅ Features
+## ✅ Características
 
-- ✨ **Bidirectional translation** - Morse ↔ Text
-- 🧪 **Unit tests** - 12 comprehensive tests
-- 📝 **Verbose mode** - Debug each compilation step
-- 🎯 **Complete alphabet** - A-Z, 0-9, special characters
-- 🚨 **Error handling** - Graceful unknown character handling
-- 📦 **CLI interface** - Easy-to-use command-line arguments
-- 🏗️ **Clean architecture** - Modular design with clear separation
+- ✨ **Traducción bidireccional** - Morse ↔ Texto
+- 🧪 **Pruebas unitarias** - 12 pruebas completas
+- 📝 **Modo detallado** - Depura cada paso de compilación
+- 🎯 **Alfabeto completo** - A-Z, 0-9, caracteres especiales
+- 🚨 **Manejo de errores** - Gestión elegante de caracteres desconocidos
+- 📦 **Interfaz CLI** - Argumentos de línea de comandos fáciles de usar
+- 🏗️ **Arquitectura limpia** - Diseño modular con separación clara
 
-## 🧪 Testing
+## 🧪 Pruebas
 
-Run all tests:
+Ejecuta todas las pruebas:
 ```bash
 cargo test
 ```
 
-Test output:
+Salida de pruebas:
 ```
-running 12 tests
+ejecutando 12 pruebas
 test ast::nodes::tests::test_letter_creation ... ok
 test ast::nodes::tests::test_word_creation ... ok
 test codegen::translator::tests::test_code_generation ... ok
@@ -123,111 +123,111 @@ test semantic::encoder::tests::test_lowercase_conversion ... ok
 test semantic::encoder::tests::test_word_with_space ... ok
 test semantic::encoder::tests::test_sentence_with_spaces ... ok
 
-test result: ok. 12 passed; 0 failed
+resultado de prueba: ok. 12 pasadas; 0 fallidas
 ```
 
-## 📦 Dependencies
+## 📦 Dependencias
 
-- **logos** (0.16.1) - Lexical analysis
-- **clap** (4.0) - Command-line parsing
+- **logos** (0.16.1) - Análisis léxico
+- **clap** (4.0) - Análisis de línea de comandos
 
-## 🏗️ Building
+## 🏗️ Construcción
 
 ```bash
-# Development
+# Desarrollo
 cargo build
 
-# Release (optimized)
+# Versión optimizada
 cargo build --release
 ```
 
-## 📋 Project Structure
+## 📋 Estructura del Proyecto
 
 ```
 Traductor_Lexer/
 ├── Cargo.toml
 ├── README.md
 ├── src/
-│   ├── main.rs                    # Entry point with bidirectional logic
-│   ├── cli.rs                     # CLI argument parsing
+│   ├── main.rs                    # Punto de entrada con lógica bidireccional
+│   ├── cli.rs                     # Análisis de argumentos CLI
 │   ├── lexer/
 │   │   ├── mod.rs
-│   │   └── token.rs              # Morse token definitions
+│   │   └── token.rs              # Definiciones de tokens Morse
 │   ├── parser/
 │   │   ├── mod.rs
-│   │   └── core.rs               # Morse sequence parsing
+│   │   └── core.rs               # Análisis de secuencias Morse
 │   ├── semantic/
 │   │   ├── mod.rs
-│   │   ├── analyzer.rs           # Morse → Text translation
-│   │   └── encoder.rs            # Text → Morse translation (NEW)
+│   │   ├── analyzer.rs           # Traducción Morse → Texto
+│   │   └── encoder.rs            # Traducción Texto → Morse (NUEVO)
 │   ├── ir/
 │   │   ├── mod.rs
-│   │   └── representation.rs      # Intermediate representation
+│   │   └── representation.rs      # Representación intermedia
 │   ├── codegen/
 │   │   ├── mod.rs
-│   │   └── translator.rs         # Final code generation
+│   │   └── translator.rs         # Generación de código final
 │   ├── ast/
 │   │   ├── mod.rs
-│   │   └── nodes.rs              # AST node definitions
+│   │   └── nodes.rs              # Definiciones de nodos AST
 │   └── utils/
 │       ├── mod.rs
-│       └── error.rs              # Error handling
-└── target/                        # Build artifacts
+│       └── error.rs              # Manejo de errores
+└── target/                        # Artefactos de construcción
 ```
 
-## 🎓 Educational Value
+## 🎓 Valor Educativo
 
-This project demonstrates:
-- **Compiler architecture** - Complete pipeline from input to output
-- **Modular Rust design** - Clean separation of concerns
-- **Bidirectional translation** - Two-way conversion logic
-- **Pattern matching** - Morse code to character mapping
-- **CLI applications** - Modern argument parsing with clap
-- **Test-driven development** - Comprehensive test coverage
-- **Error handling** - Graceful degradation for unknown inputs
+Este proyecto demuestra:
+- **Arquitectura de compiladores** - Pipeline completo de entrada a salida
+- **Diseño modular en Rust** - Separación clara de responsabilidades
+- **Traducción bidireccional** - Lógica de conversión en dos direcciones
+- **Coincidencia de patrones** - Mapeo de código Morse a caracteres
+- **Aplicaciones CLI** - Análisis moderno de argumentos con clap
+- **Desarrollo dirigido por pruebas** - Cobertura completa de pruebas
+- **Manejo de errores** - Degradación elegante para entradas desconocidas
 
-## ⚠️ Limitations
+## ⚠️ Limitaciones
 
-- ✓ ~~Text to Morse translation~~ - **IMPLEMENTED**
-- No file input/output support yet
-- No multi-language support
-- No audio/visual Morse code generation
+- ✓ ~~Traducción de Texto a Morse~~ - **IMPLEMENTADO**
+- Sin soporte de entrada/salida de archivos aún
+- Sin soporte multilingüe
+- Sin generación de código Morse de audio/visual
 
-## 🔮 Future Enhancements
+## 🔮 Mejoras Futuras
 
-- [ ] File input/output (`--input-file`, `--output-file`)
-- [ ] Audio Morse code playback
-- [ ] Interactive REPL mode
-- [ ] Performance optimizations (caching)
-- [ ] WebAssembly compilation
-- [ ] Multi-language support
-- [ ] Streaming input support
-- [ ] Unicode character support
+- [ ] Entrada/salida de archivos (`--input-file`, `--output-file`)
+- [ ] Reproducción de código Morse de audio
+- [ ] Modo REPL interactivo
+- [ ] Optimizaciones de rendimiento (caché)
+- [ ] Compilación a WebAssembly
+- [ ] Soporte multilingüe
+- [ ] Soporte de entrada con streaming
+- [ ] Soporte de caracteres Unicode
 
-## 🚀 Quick Start
+## 🚀 Inicio Rápido
 
 ```bash
-# Clone and build
+# Clonar y construir
 git clone https://github.com/Shoshan-anjo/Proyecto_Diseno_Compiladores.git
 cd Traductor_Lexer
 cargo build --release
 
-# Morse to Text (default)
+# Morse a Texto (predeterminado)
 ./target/release/traductor.exe "... --- ..."
-# Output: ✅ Text: SOS
+# Salida: ✅ Texto: SOS
 
-# Text to Morse
-./target/release/traductor.exe --to-morse "HELLO"
-# Output: ✅ Morse: .... . .-.. .-.. ---
+# Texto a Morse
+./target/release/traductor.exe --to-morse "HOLA"
+# Salida: ✅ Morse: .... --- .-.. .-
 
-# With verbose output
+# Con salida detallada
 ./target/release/traductor.exe --verbose --to-morse "HI"
 ```
 
-## 📝 License
+## 📝 Licencia
 
-This project is part of an academic compiler design course.
+Este proyecto es parte de un curso académico de diseño de compiladores.
 
 ---
 
-**Made with ❤️ in Rust** | Bidirectional Morse Translator v0.2.0
+**Hecho con ❤️ en Rust** | Traductor Bidireccional de Morse v0.2.0
