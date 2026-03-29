@@ -6,6 +6,7 @@ mod semantic;
 
 mod ast;
 mod cli;
+mod interactive;
 pub mod utils;
 
 use logos::Logos;
@@ -15,8 +16,13 @@ use clap::Parser;
 
 fn main() {
     let args = Args::parse();
-
     let input = args.input.join(" ");
+
+    // Si no hay entrada, usar modo interactivo
+    if input.trim().is_empty() && !args.to_morse && !args.verbose {
+        interactive::run_interactive_mode();
+        return;
+    }
 
     if args.to_morse {
         // Convertir texto a morse
@@ -29,13 +35,13 @@ fn main() {
 
 fn translate_text_to_morse(input: &str, verbose: bool) {
     if verbose {
-        println!("📝 Input (Text): {}", input);
+        println!("📝 Entrada (Texto): {}", input);
     }
 
     let morse_output = semantic::text_to_morse(input);
 
     if verbose {
-        println!("✨ Morse output: {}", morse_output);
+        println!("✨ Salida Morse: {}", morse_output);
     }
 
     println!("✅ Morse: {}", morse_output);
@@ -43,7 +49,7 @@ fn translate_text_to_morse(input: &str, verbose: bool) {
 
 fn translate_morse_to_text(input: &str, verbose: bool) {
     if verbose {
-        println!("📝 Input (Morse): {}", input);
+        println!("📝 Entrada (Morse): {}", input);
     }
 
     // Lexer
@@ -59,14 +65,14 @@ fn translate_morse_to_text(input: &str, verbose: bool) {
     let parsed = parser::parse(tokens);
 
     if verbose {
-        println!("📦 Parsed: {:?}", parsed);
+        println!("📦 Parseado: {:?}", parsed);
     }
 
     // Semántico
     let letters = semantic::validate_and_translate(parsed);
 
     if verbose {
-        println!("✨ Letters: {:?}", letters);
+        println!("✨ Letras: {:?}", letters);
     }
 
     // IR
@@ -79,5 +85,5 @@ fn translate_morse_to_text(input: &str, verbose: bool) {
     // Codegen
     let output = codegen::generate(ir);
 
-    println!("✅ Text: {}", output);
+    println!("✅ Texto: {}", output);
 }
