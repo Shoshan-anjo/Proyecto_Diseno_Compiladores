@@ -40,6 +40,7 @@ graph TD
 ```
 
 ### 🔍 Trazabilidad de una Traducción (Paso a Paso)
+
 ¿Qué ocurre exactamente cuando traduces Morse a Texto? Aquí tienes el viaje de un símbolo:
 
 ```mermaid
@@ -54,51 +55,40 @@ graph LR
     end
 ```
 
+---
 
-### 🛠️ Desección Técnica: Entendiendo el Código (Línea por Línea)
+## 🛠️ Desección Técnica: El Viaje del Código (Paso a Paso)
 
-A continuación, desglosamos cada parte de tu código para entender qué significa cada palabra clave (**lexema**) y símbolo.
+A continuación, explicamos cada módulo en el orden real en que el programa procesa tu entrada, detallando cada **lexema** y símbolo.
 
 ---
 
-#### 📂 1. Módulo Codegen (`src/codegen/translator.rs`)
-Este módulo se encarga de la **Generación de Código Final**.
+#### 📂 1. El Inicio: Orquestador y Menú (`src/main.rs`, `src/cli.rs`, `src/interactive.rs`)
+
+Todo comienza aquí. El programa recibe tus datos y decide por qué tubería enviarlos.
 
 ```rust
-pub fn generate(ir: IR) -> String {
-    ir.letters.iter().collect()
+use std::io::{self, Write};
+
+pub fn run_interactive_mode() {
+    let args = Args::parse();
+    let mut choice = String::new();
+    io::stdin().read_line(&mut choice).expect("Error");
 }
 ```
-*   **`pub`**: Palabra clave para "Público". Permite que esta función sea vista y usada desde `main.rs`.
-*   **`fn`**: Abreviatura de "Function". Indica el inicio de una función.
-*   **`generate`**: El nombre que le dimos a la función.
-*   **`(ir: IR)`**: El parámetro de entrada. Recibe un objeto de tipo `IR` (Representación Intermedia) y lo llama `ir` dentro de la función.
-*   **`-> String`**: La **flecha de retorno**. Indica que esta función promete entregar un texto (`String`) al terminar.
-*   **`ir.letters`**: Accede a la lista de letras guardadas en el objeto `ir`.
-*   **`.iter()`**: Crea un **iterador** (un desfile de elementos uno por uno).
-*   **`.collect()`**: Es el lexema que "recolecta" las piezas del desfile y las pega para formar el `String` final.
+
+- **`Args::parse()`**: Lee lo que escribiste en la terminal y lo convierte en datos que Rust entiende.
+- **`use std::io`**: El lexema `use` importa herramientas de Entrada/Salida.
+- **`io::stdin()`**: Activa la "oreja" del programa para escuchar tu teclado.
+- **`.read_line(&mut choice)`**: Detiene el programa hasta que escribas algo y lo guarda en `choice`.
+- **`&mut choice`**: El símbolo `&` indica una **referencia** y `mut` permite que el programa **cambie** el valor de esa variable con tu entrada.
+- **`.expect()`**: Maneja errores críticos; si el sistema falla al leer, muestra ese mensaje.
 
 ---
 
-#### 📂 2. Módulo Semántico (`src/semantic/analyzer.rs`)
-Aquí es donde se define el "significado" de los códigos Morse.
+#### 📂 2. Análisis Léxico (`src/lexer/token.rs`)
 
-```rust
-fn get_morse_map() -> HashMap<String, char> {
-    let mut map = HashMap::new();
-    map.insert("...".to_string(), 'S');
-}
-```
-*   **`HashMap<String, char>`**: Un diccionario donde la clave es un texto (`String`) y el valor es un caracter (`char`).
-*   **`let mut map`**: `let` crea la variable. `mut` (mutable) es el lexema que permite que añadamos datos a la libreta vacía.
-*   **`HashMap::new()`**: Crea la libreta de direcciones vacía.
-*   **`.insert()`**: Es la acción de escribir una nueva entrada en la libreta (Código -> Letra).
-*   **`"...".to_string()`**: Convierte un texto fijo en un objeto `String` dinámico que Rust puede manipular.
-
----
-
-#### 📂 3. Módulo Lexer (`src/lexer/token.rs`)
-Define los componentes básicos (**tokens**).
+La entrada se rompe en trozos indivisibles llamados **tokens**.
 
 ```rust
 #[derive(Logos, Debug, PartialEq)]
@@ -107,14 +97,16 @@ pub enum Token {
     Dot,
 }
 ```
-*   **`#[derive(...)]`**: Es un lexema de "metaprogramación". Le pide a Rust que genere código automáticamente por nosotros para poder imprimir (`Debug`) o comparar (`PartialEq`) los tokens.
-*   **`enum`**: Define una lista de opciones fijas. Un token solo puede ser `Dot`, `Dash`, `Space` o `Text`.
-*   **`#[token(".")]`**: Es un decorador que vincula el símbolo visual `.` con la variante lógica `Dot`.
+
+- **`enum`**: Define una lista de opciones exclusivas (Solo puede ser `Dot`, `Dash`, etc.).
+- **`#[token(".")]`**: Vincula físicamente el símbolo `.` con la entidad lógica `Dot`.
+- **`#[derive(...)]`**: Es metaprogramación para que Rust sepa automáticamente comparar e imprimir estos tokens.
 
 ---
 
-#### 📂 4. Módulo Parser (`src/parser/core.rs`)
-Agrupa los tokens en unidades con sentido.
+#### 📂 3. Análisis Sintáctico (`src/parser/core.rs`)
+
+Aquí los tokens se agrupan en unidades con sentido lingüístico.
 
 ```rust
 pub fn parse(tokens: Vec<Token>) -> Vec<String> {
@@ -122,56 +114,72 @@ pub fn parse(tokens: Vec<Token>) -> Vec<String> {
     for token in tokens { ... }
 }
 ```
-*   **`Vec<Token>`**: Una lista dinámica (Vector) que contiene objetos de tipo `Token`.
-*   **`for token in tokens`**: El bucle que recorre cada pieza del "desfile".
-*   **`match token`**: Es un lexema de "comparación de patrones". Es como un `switch` pero súper potente que obliga a cubrir todas las opciones.
+
+- **`Vec<Token>`**: Una lista dinámica (Vector) que recibe los tokens del paso anterior.
+- **`for token in tokens`**: Recorre cada pieza una por una.
+- **`match token`**: Compara cada token para decidir si lo une a la letra actual o empieza una nueva.
 
 ---
 
-#### 📂 5. Orquestador y Menú (`src/main.rs` e `interactive.rs`)
-Donde todo se une y se comunica con el usuario.
+#### 📂 4. Análisis Semántico (`src/semantic/analyzer.rs`)
+
+Se valida el significado y se realiza la traducción real usando diccionarios.
 
 ```rust
-use std::io::{self, Write};
-
-pub fn run_interactive_mode() {
-    let mut choice = String::new();
-    io::stdin().read_line(&mut choice).expect("Error");
+fn get_morse_map() -> HashMap<String, char> {
+    let mut map = HashMap::new();
+    map.insert("...".to_string(), 'S');
 }
 ```
-*   **`use std::io`**: El lexema `use` importa una caja de herramientas (librería estándar) para Entrada/Salida (`io`).
-*   **`{self, Write}`**: Importa `io` mismo y la capacidad de escribir en pantalla (`Write`).
-*   **`io::stdin()`**: Llama a la función de "Entrada Estándar" del sistema.
-*   **`.read_line(&mut choice)`**: Este método detiene el programa y espera a que el usuario escriba algo.
-*   **`&mut choice`**: El símbolo `&` indica una **referencia** (le prestamos la variable a la función). `mut` indica que la función tiene permiso para cambiar el contenido de esa variable con lo que el usuario escriba.
-*   **`.expect()`**: Es el lexema que maneja errores críticos. Si algo falla al leer, el programa se detiene con ese mensaje.
+
+- **`HashMap<String, char>`**: Un diccionario donde la clave es el código Morse y el valor es la letra.
+- **`let mut map`**: Crea la libreta vacía con permiso (`mut`) para ser llenada.
+- **`.insert()`**: Guarda la pareja "Llave -> Valor".
+- **`-> HashMap`**: La flecha indica que la función entregará ese diccionario al terminar.
 
 ---
 
-#### 📂 6. Estructuras de Datos (`src/ir/representation.rs`)
-Cómo organizamos la información en memoria.
+#### 📂 5. Representación Intermedia (IR) (`src/ir/representation.rs`)
+
+Los datos traducidos se guardan en un formato neutro, listo para cualquier salida.
 
 ```rust
-#[derive(Debug)]
 pub struct IR {
     pub letters: Vec<char>,
 }
 ```
-*   **`struct`**: Palabra clave para crear una "Estructura" personalizada. Es como una ficha técnica que agrupa diferentes datos relacionados.
-*   **`letters: Vec<char>`**: Define un campo llamado `letters` que es un Vector de caracteres.
-*   **`pub` (dentro de struct)**: No basta con que el `struct` sea público; sus campos también deben serlo si queremos acceder a ellos desde fuera.
+
+- **`struct`**: Crea una "ficha técnica" o estructura personalizada para organizar los datos traducidos.
+- **`pub letters`**: Hace que la lista de letras sea accesible para el último paso (Codegen).
+
+---
+
+#### 📂 6. Generación de Código (`src/codegen/translator.rs`)
+
+El paso final del pipeline donde la información sale al exterior.
+
+```rust
+pub fn generate(ir: IR) -> String {
+    ir.letters.iter().collect()
+}
+```
+
+- **`.iter()`**: Crea un desfile de los caracteres guardados en el IR.
+- **`.collect()`**: Toma todas las letras del desfile y las "pega" para formar la palabra o frase final en un `String`.
 
 ---
 
 #### 📂 7. Organización de Módulos (`mod.rs`)
-La jerarquía del árbol.
+
+Cómo Rust organiza jerárquicamente todas las piezas anteriores.
 
 ```rust
 pub mod core;
 pub use core::parse;
 ```
-*   **`mod core`**: Declara que existe un archivo llamado `core.rs` en esta misma carpeta.
-*   **`pub use core::parse`**: Es un "re-exporte". Permite que alguien que use este módulo pueda llamar a `parse()` directamente sin tener que escribir `modulo::core::parse()`. Es un atajo de limpieza.
+
+- **`mod core`**: Declara que existe un archivo llamado `core.rs`.
+- **`pub use`**: Crea un atajo para que otros archivos puedan usar las funciones internas fácilmente.
 
 ---
 
@@ -265,13 +273,12 @@ cargo test
 
 ---
 
-## 🔮 Próximos Pasos
+## ⏳Próximos Pasos
 
 - [ ] Soporte para entrada/salida de archivos.
 - [ ] Reproducción de audio del código Morse.
-- [ ] Compilación a WebAssembly (WASM).
 
 ---
 
-**Hecho con ❤️ en Rust | v0.2.1**
+**Hecho con ❤️ en Rust |**
 _(Toda la arquitectura del traductor explicada en un solo lugar)._
